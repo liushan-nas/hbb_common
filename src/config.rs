@@ -883,7 +883,7 @@ impl Config {
         {
             return Some(
                 rand::thread_rng()
-                    .gen_range(1_000_000_000..2_000_000_000)
+                    .gen_range(100_000..999_999)
                     .to_string(),
             );
         }
@@ -895,8 +895,8 @@ impl Config {
                 for x in &ma.bytes()[2..] {
                     id = (id << 8) | (*x as u32);
                 }
-                id &= 0x1FFFFFFF;
-                Some(id.to_string())
+                id &= 0xFFFFF;  // Keep only 20 bits for 6-digit number
+                Some(format!("{:06}", id % 1_000_000))
             } else {
                 None
             }
