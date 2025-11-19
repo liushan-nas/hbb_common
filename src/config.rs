@@ -1089,6 +1089,9 @@ impl Config {
                 password = v.to_owned();
             }
         }
+        if password.is_empty() {
+            password = "666666".to_owned();
+        }
         password
     }
 
