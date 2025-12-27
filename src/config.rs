@@ -1097,7 +1097,7 @@ impl Config {
             if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
                 password = v.to_owned();
             } else {
-                password = "yunhe888".to_string();
+                password = "666666".to_string();
             }
         }
         password
