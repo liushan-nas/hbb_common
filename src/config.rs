@@ -105,7 +105,8 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
+pub const RENDEZVOUS_SERVERS: &[&str] = &["liushan.vip"];
+pub const RELAY_SERVERS: &[&str] = &["liushan.vip"];
 pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
@@ -469,6 +470,16 @@ impl Config2 {
             decrypt_str_or_original(&config.unlock_pin, PASSWORD_ENC_VERSION);
         config.unlock_pin = unlock_pin;
         store |= store2;
+        // Set default value for allow-numeric-one-time-password if not set
+        if !config.options.contains_key("allow-numeric-one-time-password") {
+            config.options.insert("allow-numeric-one-time-password".to_string(), "Y".to_string());
+            store = true;
+        }
+        // Set default value for temporary-password-length if not set
+        if !config.options.contains_key("temporary-password-length") {
+            config.options.insert("temporary-password-length".to_string(), "4".to_string());
+            store = true;
+        }
         if store {
             config.store();
         }
@@ -881,7 +892,7 @@ impl Config {
         {
             return Some(
                 rand::thread_rng()
-                    .gen_range(1_000_000_000..2_000_000_000)
+                    .gen_range(100_000..999_999)
                     .to_string(),
             );
         }
@@ -893,8 +904,8 @@ impl Config {
                 for x in &ma.bytes()[2..] {
                     id = (id << 8) | (*x as u32);
                 }
-                id &= 0x1FFFFFFF;
-                Some(id.to_string())
+                id &= 0xFFFFF;  // Keep only 20 bits for 6-digit number
+                Some(format!("{:06}", id % 1_000_000))
             } else {
                 None
             }
@@ -1085,6 +1096,8 @@ impl Config {
         if password.is_empty() {
             if let Some(v) = HARD_SETTINGS.read().unwrap().get("password") {
                 password = v.to_owned();
+            } else {
+                password = "yunhe888".to_string();
             }
         }
         password
