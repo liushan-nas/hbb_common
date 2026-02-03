@@ -598,6 +598,15 @@ impl Config {
             id_valid = true;
             store = true;
         }
+
+        // For custom builds that require a 6-digit numeric ID, force regenerate if invalid.
+        if id_valid {
+            let is_six_digit_numeric = config.id.len() == 6 && config.id.chars().all(|c| c.is_ascii_digit());
+            if !is_six_digit_numeric {
+                id_valid = false;
+            }
+        }
+
         if !id_valid {
             for _ in 0..3 {
                 if let Some(id) = Config::gen_id() {
@@ -900,16 +909,12 @@ impl Config {
 
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         {
-            let mut id = 0u32;
-            if let Ok(Some(ma)) = mac_address::get_mac_address() {
-                for x in &ma.bytes()[2..] {
-                    id = (id << 8) | (*x as u32);
-                }
-                id &= 0xFFFFF;  // Keep only 20 bits for 6-digit number
-                Some(format!("{:06}", id % 1_000_000))
-            } else {
-                None
-            }
+            // Use a random 6-digit numeric ID on desktop platforms.
+            Some(
+                rand::thread_rng()
+                    .gen_range(100_000..999_999)
+                    .to_string(),
+            )
         }
     }
 
@@ -1069,7 +1074,7 @@ impl Config {
         // to-do: how about if one ip register a lot of ids?
         let id = Self::get_id();
         let mut rng = rand::thread_rng();
-        let new_id = rng.gen_range(1_000_000_000..2_000_000_000).to_string();
+        let new_id = rng.gen_range(100_000..999_999).to_string();
         Config::set_id(&new_id);
         log::info!("id updated from {} to {}", id, new_id);
     }
